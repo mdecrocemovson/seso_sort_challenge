@@ -24,19 +24,23 @@ function runSolutions(sourceCount) {
      * Call `printer.print(logEntry)` to print each entry of the merged output as they are ready.
      * This function will ensure that what you print is in fact in chronological order.
      * Call 'printer.done()' at the end to get a few stats on your solution!
-     */
+    //  */
     const syncLogSources = [];
     for (let i = 0; i < sourceCount; i++) {
       syncLogSources.push(new LogSource());
     }
     try {
-      require("./solution/sync-sorted-merge")(syncLogSources, new Printer());
+      const LogMerger = require("./solution/sync-sorted-merge")
+      const merger = new LogMerger(syncLogSources, new Printer());
+      merger.mergeAndPrint();
+
       resolve();
     } catch (e) {
       reject(e);
     }
+    resolve()
   }).then(() => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       /**
        * Challenge Number 2!
        *
@@ -54,12 +58,19 @@ function runSolutions(sourceCount) {
       for (let i = 0; i < sourceCount; i++) {
         asyncLogSources.push(new LogSource());
       }
-      require("./solution/async-sorted-merge")(asyncLogSources, new Printer())
-        .then(resolve)
-        .catch(reject);
+      try {
+        const { LogMergerAsync } = require("./solution/async-sorted-merge")
+        const merger = new LogMergerAsync(asyncLogSources, new Printer());
+        await merger.initializeHeap();
+        await merger.mergeAndPrint();
+
+        resolve();
+      } catch (e) {
+        reject(e);
+      }
     });
   });
 }
 
 // Adjust this input to see how your solutions perform under various loads.
-runSolutions(100);
+runSolutions(2);
