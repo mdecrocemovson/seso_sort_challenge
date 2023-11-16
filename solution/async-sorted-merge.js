@@ -13,26 +13,31 @@ class LogMergerAsync {
     this.minHeap = new MinPriorityQueue(customComparator);
   }
 
-  async initializeHeap() {
-    for (let i = 0; i < this.logSources.length; i++) {
-      await this.fetchAndInsertNextEntry(i);
+  async populateHeap(isRepopulating = false) {
+    // protection against minHeap getting too large - this is a tradeoff between memory and speed
+    if (this.minHeap.size() > this.logSources.length * 100 && isRepopulating) return;
+    let promises = [];
+    const filteredLogs = this.logSources.filter(source => !source.drained);
+    for (let i = 0; i < filteredLogs.length; i++) {
+      promises.push(this.fetchAndInsertNextEntry(filteredLogs, i));
     }
+    return Promise.all(promises);
   }
 
-  async fetchAndInsertNextEntry(sourceIndex) {
-    const entry = await this.logSources[sourceIndex].popAsync();
+
+  async fetchAndInsertNextEntry(filteredLogs, sourceIndex) {
+    const entry = await filteredLogs[sourceIndex].popAsync();
     if (entry) {
       this.minHeap.enqueue({ entry, sourceIndex });
     }
   }
 
   async mergeAndPrint() {
-    while (!this.minHeap.isEmpty()) {
-      const { entry, sourceIndex } = this.minHeap.dequeue();
-      this.printer.print(entry);
-
-      if (!this.logSources[sourceIndex].drained) {
-        await this.fetchAndInsertNextEntry(sourceIndex);
+    while (this.logSources.filter(source => !source.drained).length > 0) {
+      while (!this.minHeap.isEmpty()) {
+        const { entry } = this.minHeap.dequeue();
+        this.printer.print(entry);
+        await this.populateHeap();
       }
     }
     this.printer.done();

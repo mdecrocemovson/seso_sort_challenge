@@ -61,7 +61,7 @@ function runSolutions(sourceCount) {
       try {
         const { LogMergerAsync } = require("./solution/async-sorted-merge")
         const merger = new LogMergerAsync(asyncLogSources, new Printer());
-        await merger.initializeHeap();
+        await merger.populateHeap();
         await merger.mergeAndPrint();
 
         resolve();
@@ -73,4 +73,4 @@ function runSolutions(sourceCount) {
 }
 
 // Adjust this input to see how your solutions perform under various loads.
-runSolutions(2);
+runSolutions(1000);
