@@ -37,7 +37,7 @@ class LogMergerAsync {
       while (!this.minHeap.isEmpty()) {
         const { entry } = this.minHeap.dequeue();
         this.printer.print(entry);
-        await this.populateHeap();
+        await this.populateHeap(true);
       }
     }
     this.printer.done();
